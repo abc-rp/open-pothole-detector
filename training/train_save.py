@@ -20,6 +20,7 @@ import os
 import random
 import sys
 from pathlib import Path
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -27,13 +28,34 @@ import seaborn as sns
 from PIL import Image
 from ultralytics import YOLO
 
+
 def parse_args():
-    parser = argparse.ArgumentParser(description="Train YOLO model with best hyperparameters and save results.")
-    parser.add_argument("--hyps-file", type=str, default="best_hyps.json", help="JSON file with hyperparameters.")
-    parser.add_argument("--data", type=str, default="./yolo_potholes/data.yaml", help="Path to the dataset YAML file.")
-    parser.add_argument("--model", type=str, default="yolo12m.pt", help="Base YOLO model weights.")
-    parser.add_argument("--output-dir", type=str, default="./training_curves", help="Directory to save plots.")
+    parser = argparse.ArgumentParser(
+        description="Train YOLO model with best hyperparameters and save results."
+    )
+    parser.add_argument(
+        "--hyps-file",
+        type=str,
+        default="best_hyps.json",
+        help="JSON file with hyperparameters.",
+    )
+    parser.add_argument(
+        "--data",
+        type=str,
+        default="./yolo_potholes/data.yaml",
+        help="Path to the dataset YAML file.",
+    )
+    parser.add_argument(
+        "--model", type=str, default="yolo12m.pt", help="Base YOLO model weights."
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=str,
+        default="./training_curves",
+        help="Directory to save plots.",
+    )
     return parser.parse_args()
+
 
 def main():
     args = parse_args()
@@ -81,18 +103,20 @@ def main():
         df = pd.read_csv(results_csv)
 
         sns.set_theme(style="darkgrid", context="talk")
-        mpl.rcParams.update({
-            "figure.facecolor": "#0d1117",
-            "axes.facecolor": "#0d1117",
-            "axes.edgecolor": "0.8",
-            "grid.color": "0.5",
-            "text.color": "0.9",
-            "axes.labelcolor": "0.9",
-            "xtick.color": "0.9",
-            "ytick.color": "0.9",
-            "legend.facecolor": "#0d1117",
-            "legend.edgecolor": "0.9",
-        })
+        mpl.rcParams.update(
+            {
+                "figure.facecolor": "#0d1117",
+                "axes.facecolor": "#0d1117",
+                "axes.edgecolor": "0.8",
+                "grid.color": "0.5",
+                "text.color": "0.9",
+                "axes.labelcolor": "0.9",
+                "xtick.color": "0.9",
+                "ytick.color": "0.9",
+                "legend.facecolor": "#0d1117",
+                "legend.edgecolor": "0.9",
+            }
+        )
 
         output_plot_dir = Path(args.output_dir)
         output_plot_dir.mkdir(exist_ok=True)
@@ -100,19 +124,61 @@ def main():
         fig, axes = plt.subplots(1, 3, figsize=(21, 7))
         fontsize = 30
 
-        sns.lineplot(data=df, x="epoch", y="train/box_loss", label="box_loss", ax=axes[0], color="C0")
-        sns.lineplot(data=df, x="epoch", y="train/cls_loss", label="cls_loss", ax=axes[0], color="C1")
+        sns.lineplot(
+            data=df,
+            x="epoch",
+            y="train/box_loss",
+            label="box_loss",
+            ax=axes[0],
+            color="C0",
+        )
+        sns.lineplot(
+            data=df,
+            x="epoch",
+            y="train/cls_loss",
+            label="cls_loss",
+            ax=axes[0],
+            color="C1",
+        )
         if "train/dfl_loss" in df.columns:
-            sns.lineplot(data=df, x="epoch", y="train/dfl_loss", label="dfl_loss", ax=axes[0], color="C2")
+            sns.lineplot(
+                data=df,
+                x="epoch",
+                y="train/dfl_loss",
+                label="dfl_loss",
+                ax=axes[0],
+                color="C2",
+            )
         axes[0].set_title("Training Curves", fontsize=fontsize, color="0.9")
         axes[0].set_ylabel("Loss", color="0.9")
         axes[0].legend()
         axes[0].grid(True)
 
-        sns.lineplot(data=df, x="epoch", y="val/box_loss", label="box_loss", ax=axes[1], color="C0")
-        sns.lineplot(data=df, x="epoch", y="val/cls_loss", label="cls_loss", ax=axes[1], color="C1")
+        sns.lineplot(
+            data=df,
+            x="epoch",
+            y="val/box_loss",
+            label="box_loss",
+            ax=axes[1],
+            color="C0",
+        )
+        sns.lineplot(
+            data=df,
+            x="epoch",
+            y="val/cls_loss",
+            label="cls_loss",
+            ax=axes[1],
+            color="C1",
+        )
         if "val/dfl_loss" in df.columns:
-            sns.lineplot(data=df, x="epoch", y="val/dfl_loss", label="dfl_loss", ax=axes[1], color="C2")
+            sns.lineplot(
+                data=df,
+                x="epoch",
+                y="val/dfl_loss",
+                label="dfl_loss",
+                ax=axes[1],
+                color="C2",
+            )
         axes[1].set_title("Validation Curves", fontsize=fontsize, color="0.9")
         axes[1].set_ylabel("Loss", color="0.9")
         axes[1].legend()
@@ -126,7 +192,9 @@ def main():
         }
         for i, (col, label) in enumerate(metric_cols.items()):
             if col in df.columns:
-                sns.lineplot(data=df, x="epoch", y=col, label=label, ax=axes[2], color=f"C{i+3}")
+                sns.lineplot(
+                    data=df, x="epoch", y=col, label=label, ax=axes[2], color=f"C{i+3}"
+                )
         axes[2].set_title("Validation Metrics", fontsize=fontsize, color="0.9")
         axes[2].set_ylabel("Metric", color="0.9")
         axes[2].legend()
@@ -141,15 +209,19 @@ def main():
         print(f"No results.csv found at: {results_csv}. Cannot plot training curves.")
 
     best_model = YOLO(best_weights)
-    
+
     dataset_path = Path(args.data).parent
     val_images = dataset_path / "val/images"
     print(f"\n=== Running inference on validation images: {val_images} ===")
-    best_model.predict(source=val_images, save=True, save_conf=True, name="val_inference")
+    best_model.predict(
+        source=val_images, save=True, save_conf=True, name="val_inference"
+    )
     print("\nInference complete! Annotated images saved in: runs/detect/val_inference/")
 
     predict_root = Path("runs/detect")
-    val_inference_folders = sorted(predict_root.glob("val_inference*"), key=lambda p: p.stat().st_mtime)
+    val_inference_folders = sorted(
+        predict_root.glob("val_inference*"), key=lambda p: p.stat().st_mtime
+    )
 
     if val_inference_folders:
         latest_val_inference_folder = val_inference_folders[-1]
@@ -172,6 +244,7 @@ def main():
             plt.savefig(out_examples, dpi=150)
             plt.close()
             print(f"Saved 2x2 sample of predicted images to '{out_examples}'")
+
 
 if __name__ == "__main__":
     main()

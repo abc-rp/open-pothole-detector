@@ -21,11 +21,25 @@ import shutil
 from glob import glob
 from pathlib import Path
 
+
 def parse_args():
-    parser = argparse.ArgumentParser(description="Upsample positive images to balance the dataset.")
-    parser.add_argument("--images-dir", type=str, default="./yolo_potholes/train/images", help="Directory containing training images.")
-    parser.add_argument("--labels-dir", type=str, default="./yolo_potholes/train/labels", help="Directory containing training labels.")
+    parser = argparse.ArgumentParser(
+        description="Upsample positive images to balance the dataset."
+    )
+    parser.add_argument(
+        "--images-dir",
+        type=str,
+        default="./yolo_potholes/train/images",
+        help="Directory containing training images.",
+    )
+    parser.add_argument(
+        "--labels-dir",
+        type=str,
+        default="./yolo_potholes/train/labels",
+        help="Directory containing training labels.",
+    )
     return parser.parse_args()
+
 
 def main():
     args = parse_args()
@@ -44,7 +58,7 @@ def main():
     for label_path in label_files:
         with open(label_path) as f:
             lines = f.readlines()
-        
+
         base_name = Path(label_path).stem
         img_path = None
         for ext in image_exts:
@@ -52,7 +66,7 @@ def main():
             if candidate.is_file():
                 img_path = candidate
                 break
-        
+
         if not img_path:
             continue
 
@@ -67,7 +81,7 @@ def main():
     if n_pos == 0:
         print("No positive images found to upsample.")
         return
-    
+
     if n_neg == 0:
         print("No negative images found to determine upsampling target.")
         return
@@ -94,7 +108,10 @@ def main():
         shutil.copy(src_img_path, dest_img_path)
         shutil.copy(src_label_path, dest_label_path)
 
-    print(f"Upsampled {copies_needed} positive images. Now you have approximately {n_neg} positives and {n_neg} negatives.")
+    print(
+        f"Upsampled {copies_needed} positive images. Now you have approximately {n_neg} positives and {n_neg} negatives."
+    )
+
 
 if __name__ == "__main__":
     main()

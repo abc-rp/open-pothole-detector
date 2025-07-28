@@ -16,19 +16,40 @@
 
 import argparse
 import json
-import os
+
 import ray
 from ray import tune
 from ultralytics import YOLO
 
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Fine-tune YOLO model using Ray Tune.")
-    parser.add_argument("--data", type=str, default="./yolo_potholes/data.yaml", help="Path to the dataset YAML file.")
-    parser.add_argument("--model", type=str, default="yolo12m.pt", help="Base YOLO model weights.")
-    parser.add_argument("--output-file", type=str, default="best_hyps.json", help="File to save the best hyperparameters.")
-    parser.add_argument("--iterations", type=int, default=100, help="Number of tuning trials.")
-    parser.add_argument("--gpu-per-trial", type=int, default=1, help="Number of GPUs to allocate per trial.")
+    parser.add_argument(
+        "--data",
+        type=str,
+        default="./yolo_potholes/data.yaml",
+        help="Path to the dataset YAML file.",
+    )
+    parser.add_argument(
+        "--model", type=str, default="yolo12m.pt", help="Base YOLO model weights."
+    )
+    parser.add_argument(
+        "--output-file",
+        type=str,
+        default="best_hyps.json",
+        help="File to save the best hyperparameters.",
+    )
+    parser.add_argument(
+        "--iterations", type=int, default=100, help="Number of tuning trials."
+    )
+    parser.add_argument(
+        "--gpu-per-trial",
+        type=int,
+        default=1,
+        help="Number of GPUs to allocate per trial.",
+    )
     return parser.parse_args()
+
 
 def main():
     args = parse_args()
@@ -58,18 +79,21 @@ def main():
         imgsz=640,
         augment=True,
     )
-    
+
     best_result = result_grid.get_best_result(metric="metrics/mAP50(B)", mode="max")
     best_config = best_result.config
-    
+
     print("\n=== Best hyperparameters found ===")
     print(best_config)
 
     with open(args.output_file, "w") as f:
         json.dump(best_config, f, indent=2)
-        
+
     print(f"\nSaved best hyperparameters to '{args.output_file}'")
-    print("Next, run 'python train_save.py' to train a final model with these hyperparams.")
+    print(
+        "Next, run 'python train_save.py' to train a final model with these hyperparams."
+    )
+
 
 if __name__ == "__main__":
     main()

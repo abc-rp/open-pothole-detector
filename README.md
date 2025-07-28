@@ -8,7 +8,7 @@ This project provides a complete pipeline for training a YOLO12-based object det
 - **Data Processing:** Automatically converts Supervisely-formatted annotations to the YOLO format, and balances the dataset by upsampling positive samples.
 - **Hyperparameter Tuning:** Uses Ray Tune to automatically find the best hyperparameters for training.
 - **Training & Evaluation:** Trains a YOLO12 model and provides detailed evaluation metrics and visualizations.
-- **Pre-trained Model:** Includes a pre-trained YOLO12-Medium model as a starting point.
+- **Pre-trained Model:** Includes a YOLO12-Medium model fine-tuned on the pothole dataset.
 
 ## Project Structure
 

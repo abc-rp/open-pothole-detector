@@ -1,3 +1,37 @@
 *.tar
 
 GEMINI.md
+
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+build/
+dist/
+*.egg-info/
+
+# Virtual Environments
+.env
+.venv
+env/
+venv/
+
+# IDE / Editor configuration
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Project-specific generated files
+/runs/
+/yolo_potholes/
+/training_curves/
+/data_check/
+/evaluation_metrics.json
+/best_hyps.json

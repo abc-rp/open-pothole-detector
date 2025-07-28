@@ -1,57 +1,84 @@
+import argparse
 import os
-import shutil
 import random
+import shutil
 from glob import glob
+from pathlib import Path
 
-# Set your dataset paths
-images_dir = "./yolo_potholes/train/images"
-labels_dir = "./yolo_potholes/train/labels"
+def parse_args():
+    parser = argparse.ArgumentParser(description="Upsample positive images to balance the dataset.")
+    parser.add_argument("--images-dir", type=str, default="./yolo_potholes/train/images", help="Directory containing training images.")
+    parser.add_argument("--labels-dir", type=str, default="./yolo_potholes/train/labels", help="Directory containing training labels.")
+    return parser.parse_args()
 
-# Supported image extensions
-image_exts = [".jpg", ".jpeg", ".png", ".JPG", ".JPEG", ".PNG"]
+def main():
+    args = parse_args()
+    images_dir = args.images_dir
+    labels_dir = args.labels_dir
 
-# Find positive and negative images
-positive_images = []
-negative_images = []
+    image_exts = [".jpg", ".jpeg", ".png", ".JPG", ".JPEG", ".PNG"]
+    positive_images = []
+    negative_images = []
 
-for label_path in glob(os.path.join(labels_dir, "*.txt")):
-    with open(label_path) as f:
-        lines = f.readlines()
-    base_name = os.path.splitext(os.path.basename(label_path))[0]
-    img_path = None
-    for ext in image_exts:
-        candidate = os.path.join(images_dir, base_name + ext)
-        if os.path.isfile(candidate):
-            img_path = candidate
-            break
-    if not img_path:
-        continue  # skip if no image file exists for this label
-    if any(line.strip() for line in lines):
-        positive_images.append(img_path)
-    else:
-        negative_images.append(img_path)
+    label_files = glob(os.path.join(labels_dir, "*.txt"))
+    if not label_files:
+        print(f"No label files found in {labels_dir}.")
+        return
 
-n_pos = len(positive_images)
-n_neg = len(negative_images)
+    for label_path in label_files:
+        with open(label_path) as f:
+            lines = f.readlines()
+        
+        base_name = Path(label_path).stem
+        img_path = None
+        for ext in image_exts:
+            candidate = Path(images_dir) / (base_name + ext)
+            if candidate.is_file():
+                img_path = candidate
+                break
+        
+        if not img_path:
+            continue
 
-if n_pos == 0 or n_neg == 0:
-    print("No positive or negative images found.")
-    exit(1)
+        if any(line.strip() for line in lines):
+            positive_images.append(str(img_path))
+        else:
+            negative_images.append(str(img_path))
 
-print(f"Found {n_pos} positive and {n_neg} negative images.")
+    n_pos = len(positive_images)
+    n_neg = len(negative_images)
 
-# Upsample positives to match negatives
-copies_needed = n_neg - n_pos
-if copies_needed <= 0:
-    print("No upsampling needed.")
-    exit(0)
+    if n_pos == 0:
+        print("No positive images found to upsample.")
+        return
+    
+    if n_neg == 0:
+        print("No negative images found to determine upsampling target.")
+        return
 
-for i in range(copies_needed):
-    src_img = random.choice(positive_images)
-    src_label = os.path.join(labels_dir, os.path.splitext(os.path.basename(src_img))[0] + ".txt")
-    new_img = os.path.join(images_dir, f"upsampled_{i}_{os.path.basename(src_img)}")
-    new_label = os.path.join(labels_dir, f"upsampled_{i}_{os.path.basename(src_label)}")
-    shutil.copy(src_img, new_img)
-    shutil.copy(src_label, new_label)
+    print(f"Found {n_pos} positive and {n_neg} negative images.")
 
-print(f"Upsampled positive images to match negatives. Now you have {n_neg} positives and {n_neg} negatives.")
+    copies_needed = n_neg - n_pos
+    if copies_needed <= 0:
+        print("No upsampling needed (positive samples >= negative samples).")
+        return
+
+    for i in range(copies_needed):
+        src_img_path = random.choice(positive_images)
+        src_img_name = Path(src_img_path).name
+        src_label_name = Path(src_img_path).stem + ".txt"
+        src_label_path = os.path.join(labels_dir, src_label_name)
+
+        new_img_name = f"upsampled_{i}_{src_img_name}"
+        new_label_name = f"upsampled_{i}_{src_label_name}"
+
+        dest_img_path = os.path.join(images_dir, new_img_name)
+        dest_label_path = os.path.join(labels_dir, new_label_name)
+
+        shutil.copy(src_img_path, dest_img_path)
+        shutil.copy(src_label_path, dest_label_path)
+
+    print(f"Upsampled {copies_needed} positive images. Now you have approximately {n_neg} positives and {n_neg} negatives.")
+
+if __name__ == "__main__":
+    main()
